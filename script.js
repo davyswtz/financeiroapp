@@ -423,19 +423,22 @@ function renderDashboard(rows) {
 
   // ===== Gráfico 1: Pizza (gastos por categoria no mês) =====
   const byCat = {};
-  rows
-    .filter((r) => r.type === "expense")
-    .forEach((r) => {
-      const cat = r.category || "Sem categoria";
-      byCat[cat] = (byCat[cat] || 0) + Number(r.amount);
-    });
+  const categoryTypes = {}; // Para rastrear se é receita ou despesa
+  
+  rows.forEach((r) => {
+    const cat = r.category || "Sem categoria";
+    byCat[cat] = (byCat[cat] || 0) + Number(r.amount);
+    categoryTypes[cat] = r.type;
+  });
 
   const pieLabels = Object.keys(byCat);
   const pieValues = Object.values(byCat);
-  const colors = [
-    '#ef4444', '#f97316', '#eab308', '#22c55e', 
-    '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
-  ];
+  
+  // Cores: verde para receitas, outras cores para despesas
+  const expenseColors = ['#ef4444', '#f97316', '#eab308', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
+  const pieColors = pieLabels.map((label, index) => {
+    return categoryTypes[label] === 'income' ? '#10b981' : expenseColors[index % expenseColors.length];
+  });
 
   // Calcula porcentagem do saldo restante
   const totalIncome = income || 1;
@@ -446,13 +449,16 @@ function renderDashboard(rows) {
   if (pieCanvas) {
     if (pieChart) pieChart.destroy();
     
+    // Se não há dados de despesas, mostra apenas o texto central
+    const hasData = pieLabels.length > 0 && pieValues.some(v => v > 0);
+    
     pieChart = new Chart(pieCanvas, {
       type: "doughnut",
       data: {
-        labels: pieLabels.length ? pieLabels : ["Sem dados"],
+        labels: hasData ? pieLabels : ["Sem gastos"],
         datasets: [{
-          data: pieValues.length ? pieValues : [1],
-          backgroundColor: colors,
+          data: hasData ? pieValues : [1],
+          backgroundColor: hasData ? pieColors : ['rgba(148, 163, 184, 0.3)'],
           borderWidth: 0,
           cutout: '70%'
         }],
@@ -463,7 +469,8 @@ function renderDashboard(rows) {
         plugins: { 
           legend: { 
             position: "bottom",
-            labels: { color: '#e2e8f0', usePointStyle: true }
+            labels: { color: '#e2e8f0', usePointStyle: true },
+            display: hasData
           }
         }
       },
