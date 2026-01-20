@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finanças Dashboard</title>
+
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- LOGIN -->
+    <section id="auth" class="auth-section">
+      <div class="auth-card">
+        <div class="auth-header">
+          <i class="fas fa-wallet"></i>
+          <h1>Finanças Dashboard</h1>
+          <p>Gerencie suas finanças de forma inteligente</p>
+        </div>
+        <div class="auth-form">
+          <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input id="email" type="email" placeholder="Email" />
+          </div>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input id="password" type="password" placeholder="Senha" />
+          </div>
+          <div class="auth-buttons">
+            <button id="btnSignIn" type="button" class="btn-primary">
+              <i class="fas fa-sign-in-alt"></i>
+              Entrar
+            </button>
+            <button id="btnSignUp" type="button" class="btn-secondary">
+              <i class="fas fa-user-plus"></i>
+              Criar conta
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APP (Dashboard primeiro) -->
+    <section id="app" class="hidden">
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-title">
+            <i class="fas fa-chart-line"></i>
+            <h1>Dashboard Financeiro</h1>
+          </div>
+          <div class="header-actions">
+            <button id="btnAddTransaction" type="button" class="btn-add">
+              <i class="fas fa-plus"></i>
+              Adicionar
+            </button>
+            <button id="btnSignOut" type="button" class="btn-logout">
+              <i class="fas fa-sign-out-alt"></i>
+              Sair
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard-main">
+        <!-- RESUMO -->
+        <section class="summary-section">
+          <div class="cards">
+            <div class="card income-card">
+              <div class="card-icon">
+                <i class="fas fa-arrow-up"></i>
+              </div>
+              <div class="card-content">
+                <div class="label">Receitas (mês)</div>
+                <div id="incomeTotal" class="value">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="card expense-card">
+              <div class="card-icon">
+                <i class="fas fa-arrow-down"></i>
+              </div>
+              <div class="card-content">
+                <div class="label">Despesas (mês)</div>
+                <div id="expenseTotal" class="value">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="card balance-card">
+              <div class="card-icon">
+                <i class="fas fa-balance-scale"></i>
+              </div>
+              <div class="card-content">
+                <div class="label">Saldo (mês)</div>
+                <div id="balanceTotal" class="value">R$ 0,00</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- GRÁFICOS -->
+        <section class="charts-section">
+          <div class="charts-grid">
+            <div class="chart-panel">
+              <div class="panel-header">
+                <i class="fas fa-chart-pie"></i>
+                <h3>Saldo restante do orçamento</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-panel">
+              <div class="panel-header">
+                <i class="fas fa-chart-line"></i>
+                <h3>Saldo acumulado</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-panel full">
+              <div class="panel-header">
+                <i class="fas fa-chart-bar"></i>
+                <h3>Gastos mensais (últimos 6 meses)</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="barChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRANSAÇÕES RECENTES -->
+        <section class="recent-transactions">
+          <div class="section-title">
+            <i class="fas fa-history"></i>
+            <h3>Transações Recentes</h3>
+          </div>
+          <ul id="list" class="transactions-ul"></ul>
+        </section>
+      </main>
+    </section>
+    <!-- TELA DE ADICIONAR TRANSAÇÃO -->
+    <section id="addTransaction" class="hidden">
+      <header class="dashboard-header">
+        <div class="header-content">
+          <div class="header-title">
+            <i class="fas fa-plus-circle"></i>
+            <h1>Nova Transação</h1>
+          </div>
+          <div class="header-actions">
+            <button id="btnBackToDashboard" type="button" class="btn-back">
+              <i class="fas fa-arrow-left"></i>
+              Voltar
+            </button>
+            <button id="btnSignOut2" type="button" class="btn-logout">
+              <i class="fas fa-sign-out-alt"></i>
+              Sair
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="add-transaction-main">
+        <div class="transaction-card">
+          <div class="card-header">
+            <div class="header-icon">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+            <h2>Nova Transação</h2>
+            <p>Registre suas receitas e despesas de forma rápida e organizada</p>
+          </div>
+
+          <form id="formTx" class="transaction-form">
+            <!-- Tipo de Transação -->
+            <div class="transaction-type-selector">
+              <div class="type-option" data-type="expense">
+                <div class="type-icon expense">
+                  <i class="fas fa-arrow-down"></i>
+                </div>
+                <span>Despesa</span>
+              </div>
+              <div class="type-option" data-type="income">
+                <div class="type-icon income">
+                  <i class="fas fa-arrow-up"></i>
+                </div>
+                <span>Receita</span>
+              </div>
+            </div>
+            <input type="hidden" id="type" value="expense" required />
+
+            <!-- Campos do Formulário -->
+            <div class="form-section">
+              <h3><i class="fas fa-info-circle"></i> Informações Básicas</h3>
+              <div class="form-row">
+                <div class="input-group">
+                  <label for="date"><i class="fas fa-calendar"></i> Data</label>
+                  <input type="date" id="date" required />
+                </div>
+                <div class="input-group">
+                  <label for="amount"><i class="fas fa-dollar-sign"></i> Valor</label>
+                  <input id="amount" type="number" step="0.01" placeholder="0,00" required />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="category"><i class="fas fa-tag"></i> Categoria</label>
+                <div class="category-selector">
+                  <select id="categorySelect">
+                    <option value="">Selecione uma categoria</option>
+                    <option value="custom">+ Nova categoria</option>
+                  </select>
+                  <input id="category" placeholder="Digite nova categoria..." style="display: none;" required />
+                </div>
+              </div>
+            </div>
+
+            <!-- Método de Pagamento -->
+            <div class="form-section">
+              <h3><i class="fas fa-credit-card"></i> Método de Pagamento</h3>
+              <div class="payment-methods">
+                <div class="payment-option" data-method="dinheiro">
+                  <div class="payment-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                  </div>
+                  <span>Dinheiro</span>
+                </div>
+                <div class="payment-option" data-method="pix">
+                  <div class="payment-icon">
+                    <i class="fas fa-qrcode"></i>
+                  </div>
+                  <span>PIX</span>
+                </div>
+                <div class="payment-option" data-method="debito">
+                  <div class="payment-icon">
+                    <i class="fas fa-credit-card"></i>
+                  </div>
+                  <span>Débito</span>
+                </div>
+                <div class="payment-option" data-method="credito">
+                  <div class="payment-icon">
+                    <i class="fas fa-credit-card"></i>
+                  </div>
+                  <span>Crédito</span>
+                </div>
+              </div>
+              <input type="hidden" id="paymentMethod" value="dinheiro" required />
+            </div>
+
+            <!-- Observações -->
+            <div class="form-section">
+              <div class="input-group">
+                <label for="description"><i class="fas fa-comment"></i> Observações (opcional)</label>
+                <textarea id="description" placeholder="Adicione detalhes sobre esta transação..." rows="3"></textarea>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-save">
+              <i class="fas fa-check"></i>
+              Salvar Transação
+            </button>
+          </form>
+        </div>
+
+        <!-- LISTA DE TODAS AS TRANSAÇÕES -->
+        <div class="all-transactions">
+          <div class="section-title">
+            <i class="fas fa-list"></i>
+            <h3>Todas as Transações</h3>
+          </div>
+          <ul id="allTransactionsList" class="transactions-ul"></ul>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <!-- seu JS por último -->
+  <script src="script.js"></script>
+</body>
+</html>
